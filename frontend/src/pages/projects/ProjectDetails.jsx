@@ -9,6 +9,7 @@ import {
 
 const LOCAL_ENGINE_URL = import.meta.env.VITE_LOCAL_ENGINE_URL || 'http://localhost:5000';
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
+import { AssetService, FaceAuthService } from '../../services/api';
 
 
 const TABS = [
@@ -74,16 +75,8 @@ export default function ProjectDetails({ projects, testCases, setTestCases, exec
     if (!id) return;
     setAssetsLoading(true);
     try {
-      const token = localStorage.getItem('access_token');
-      const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
-      const res = await fetch(`${LOCAL_ENGINE_URL}/api/projects/${id}/assets`, { headers });
-      if (res.ok) {
-        const raw = await res.json();
-        const list = Array.isArray(raw) ? raw : (raw.assets || raw.data || []);
-        setProjectAssets(Array.isArray(list) ? list : []);
-      } else {
-        setProjectAssets([]);
-      }
+      const list = await AssetService.listAssets(id);
+      setProjectAssets(Array.isArray(list) ? list : []);
     } catch (e) {
       console.error('Failed to fetch project assets:', e);
       setProjectAssets([]);
@@ -103,61 +96,30 @@ export default function ProjectDetails({ projects, testCases, setTestCases, exec
     if (!files || files.length === 0) return;
 
     setAssetUploadLoading(true);
-    const formData = new FormData();
-    for (let i = 0; i < files.length; i++) {
-      formData.append('file', files[i]);
-    }
-
     try {
-      const token = localStorage.getItem('access_token');
-      const res = await fetch(`${LOCAL_ENGINE_URL}/api/projects/${id}/assets`, {
-        method: 'POST',
-        headers: token ? { 'Authorization': `Bearer ${token}` } : {},
-        body: formData
-      });
-      if (res.ok) {
-        const resData = await res.json().catch(() => ({}));
-        // Optimistically add assets to state immediately so they appear right away
-        const saved = resData.assets || [];
-        if (saved.length > 0) {
-          setProjectAssets(prev => {
-            const ids = new Set(prev.map(a => String(a.id)));
-            const newOnes = saved.filter(a => !ids.has(String(a.id)));
-            return [...prev, ...newOnes];
-          });
-        }
-        // Then also do a server re-fetch to ensure full accuracy
-        await fetchProjectAssets();
-      } else {
-        const errData = await res.json().catch(() => ({}));
-        throw new Error(errData.error || errData.details || `Server returned status ${res.status}`);
+      for (let i = 0; i < files.length; i++) {
+        const formData = new FormData();
+        formData.append('file', files[i]);
+        const newAsset = await AssetService.uploadAsset(id, formData);
+        setProjectAssets(prev => [newAsset, ...prev]);
       }
     } catch (err) {
       console.error('Failed to upload asset:', err);
       alert(`Asset Upload Failed: ${err.message}`);
     } finally {
       setAssetUploadLoading(false);
+      fetchProjectAssets();
     }
   };
 
   const handleDeleteAsset = async (assetObj) => {
     const assetId = typeof assetObj === 'object' ? assetObj.id : assetObj;
-    const filename = typeof assetObj === 'object' ? assetObj.original_filename : '';
     if (!window.confirm('Are you sure you want to delete this asset?')) return;
-    // Optimistically remove from UI immediately
     setProjectAssets(prev => Array.isArray(prev) ? prev.filter(a => String(a.id) !== String(assetId)) : []);
     try {
-      const url = `${LOCAL_ENGINE_URL}/api/assets/${assetId}?project_id=${id}&filename=${encodeURIComponent(filename || '')}`;
-      const res = await fetch(url, { method: 'DELETE' });
-      if (!res.ok) {
-        // If delete failed on server, re-fetch to restore state
-        console.error('Delete failed on server, re-fetching assets...');
-        await fetchProjectAssets();
-      }
+      await AssetService.deleteAsset(assetId);
     } catch (err) {
       console.error('Failed to delete asset:', err);
-      // On network error, re-fetch to restore actual state
-      await fetchProjectAssets();
     }
   };
 
@@ -165,15 +127,13 @@ export default function ProjectDetails({ projects, testCases, setTestCases, exec
   const handleSaveRenameAsset = async () => {
     if (!renameAssetModal || !renameInputVal.trim()) return;
     try {
-      const res = await fetch(`${LOCAL_ENGINE_URL}/api/assets/${renameAssetModal.id}/rename`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ asset_name: renameInputVal.trim() })
-      });
-      if (res.ok) {
-        fetchProjectAssets();
-        setRenameAssetModal(null);
-      }
+      // Update optimistically in local state
+      setProjectAssets(prev => prev.map(a =>
+        String(a.id) === String(renameAssetModal.id) ? { ...a, asset_name: renameInputVal.trim(), name: renameInputVal.trim() } : a
+      ));
+      await AssetService.renameAsset(renameAssetModal.id, renameInputVal.trim());
+      setRenameAssetModal(null);
+      setRenameInputVal('');
     } catch (err) {
       console.error('Failed to rename asset:', err);
     }
@@ -185,16 +145,8 @@ export default function ProjectDetails({ projects, testCases, setTestCases, exec
     const formData = new FormData();
     formData.append('file', file);
     try {
-      const res = await fetch(`${LOCAL_ENGINE_URL}/api/assets/${assetId}/replace`, {
-        method: 'POST',
-        body: formData
-      });
-      if (res.ok) {
-        fetchProjectAssets();
-      } else {
-        const errData = await res.json().catch(() => ({}));
-        throw new Error(errData.error || errData.details || `Server returned status ${res.status}`);
-      }
+      await AssetService.replaceAsset(assetId, formData);
+      fetchProjectAssets();
     } catch (err) {
       console.error('Failed to replace asset:', err);
       alert(`Asset Replacement Failed: ${err.message}`);
@@ -285,20 +237,27 @@ export default function ProjectDetails({ projects, testCases, setTestCases, exec
       setEditModalSaving(false);
       setEditModalTestCase(null);
 
-      // Fire-and-forget: save to backend in background
+      // Fire-and-forget: save to backend in background, fall back to Supabase
+      const savedPayload = { name: editModalName, commands: editModalCommands, cached_json: parsedJson };
       fetch(`${LOCAL_ENGINE_URL}/api/test-cases/${editModalTestCase.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: editModalName, commands: editModalCommands, cached_json: parsedJson }),
+        body: JSON.stringify(savedPayload),
         signal: AbortSignal.timeout(10000)
-      }).then(res => res.json()).then(responseData => {
+      }).then(res => res.ok ? res.json() : null).then(responseData => {
         if (responseData && responseData.id) {
           setTestCases(prev => prev.map(tc =>
             String(tc.id) === String(editModalTestCase.id) ? { ...tc, ...responseData } : tc
           ));
         }
-      }).catch(err => {
-        console.error('Background save failed (test case already updated locally):', err);
+      }).catch(async err => {
+        console.warn('Background local save failed, using Supabase fallback:', err);
+        try {
+          const { supabase } = await import('../../supabaseClient');
+          await supabase.from('test_cases').update(savedPayload).eq('id', editModalTestCase.id);
+        } catch (sbErr) {
+          console.error('Supabase fallback also failed:', sbErr);
+        }
       });
     } catch (err) {
       console.error('Failed to save test case edit:', err);
@@ -312,54 +271,63 @@ export default function ProjectDetails({ projects, testCases, setTestCases, exec
 
   useEffect(() => {
     if (project?.id) {
+      // Load face auth from local backend first, fall back to FaceAuthService
       fetch(`${LOCAL_ENGINE_URL}/api/projects/${project.id}/face-auth`)
-        .then(res => res.json())
+        .then(res => res.ok ? res.json() : null)
         .then(data => {
-          setFaceAuthEnabled(!!data.face_auth_enabled);
-          setFaceVideoUrl(data.face_video_url || null);
+          if (data) {
+            setFaceAuthEnabled(!!data.enabled || !!data.face_auth_enabled);
+            setFaceVideoUrl(data.video_url || data.face_video_url || null);
+          } else {
+            // Fallback to FaceAuthService (Supabase)
+            return FaceAuthService.getFaceAuth(project.id).then(d => {
+              setFaceAuthEnabled(!!d?.enabled);
+              setFaceVideoUrl(d?.video_url || null);
+            });
+          }
         })
-        .catch(err => console.error("Error fetching face auth settings:", err));
+        .catch(err => {
+          console.warn("Local face auth fetch failed, using Supabase fallback:", err);
+          FaceAuthService.getFaceAuth(project.id).then(d => {
+            setFaceAuthEnabled(!!d?.enabled);
+            setFaceVideoUrl(d?.video_url || null);
+          }).catch(console.error);
+        });
     }
   }, [project?.id]);
 
   const handleFaceAuthToggle = async (enabled) => {
     setFaceAuthEnabled(enabled);
-    const formData = new FormData();
-    formData.append("face_auth_enabled", enabled ? "true" : "false");
     try {
+      const formData = new FormData();
+      formData.append("face_auth_enabled", enabled ? "true" : "false");
       const res = await fetch(`${LOCAL_ENGINE_URL}/api/projects/${project.id}/face-auth`, {
         method: "POST",
         body: formData
       });
-      const data = await res.json();
-      if (data.config) {
-        setFaceAuthEnabled(data.config.face_auth_enabled);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.config) {
+          setFaceAuthEnabled(!!data.config.enabled || !!data.config.face_auth_enabled);
+        }
       }
     } catch (err) {
-      console.error("Failed to update face auth status:", err);
+      console.warn("Failed to update face auth on local backend:", err);
     }
   };
 
   const handleVideoUpload = async (e) => {
     const file = e.target.files[0];
-    if (!file) return;
+    if (!file || !project) return;
     setUploadingVideo(true);
     const formData = new FormData();
     formData.append("face_auth_enabled", "true");
     formData.append("video", file);
 
     try {
-      const res = await fetch(`${LOCAL_ENGINE_URL}/api/projects/${project.id}/face-auth`, {
-        method: "POST",
-        body: formData
-      });
-      const data = await res.json();
-      if (res.ok && data.config) {
-        setFaceAuthEnabled(true);
-        setFaceVideoUrl(data.config.face_video_url);
-      } else {
-        throw new Error(data.error || data.details || `Server returned status ${res.status}`);
-      }
+      const data = await FaceAuthService.uploadFaceAuth(project.id, formData);
+      setFaceAuthEnabled(true);
+      setFaceVideoUrl(data.video_url || file.name);
     } catch (err) {
       console.error("Failed to upload face video:", err);
       alert(`Face Video Upload Failed: ${err.message}`);
@@ -369,10 +337,9 @@ export default function ProjectDetails({ projects, testCases, setTestCases, exec
   };
 
   const handleDeleteVideo = async () => {
+    if (!project) return;
     try {
-      await fetch(`${LOCAL_ENGINE_URL}/api/projects/${project.id}/face-auth`, {
-        method: "DELETE"
-      });
+      await FaceAuthService.deleteFaceAuth(project.id);
       setFaceAuthEnabled(false);
       setFaceVideoUrl(null);
     } catch (err) {
@@ -614,16 +581,33 @@ export default function ProjectDetails({ projects, testCases, setTestCases, exec
         // Fallback if raw output isn't clean JSON array
       }
 
-      // Update test case via local backend REST endpoint
-      const res = await fetch(`${LOCAL_ENGINE_URL}/api/test-cases/${selectedTestCase.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ commands: nlScript, cached_json: parsedJson })
-      });
-      const responseData = await res.json();
-      if (res.ok && responseData) {
-        // Update local state list
-        setTestCases(prev => prev.map(tc => tc.id === selectedTestCase.id ? responseData : tc));
+      // Optimistic local state update immediately
+      const updatedTc = { ...selectedTestCase, commands: nlScript, cached_json: parsedJson };
+      setTestCases(prev => prev.map(tc => String(tc.id) === String(selectedTestCase.id) ? updatedTc : tc));
+
+      // Try to update via local backend, fall back to Supabase
+      try {
+        const res = await fetch(`${LOCAL_ENGINE_URL}/api/test-cases/${selectedTestCase.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ commands: nlScript, cached_json: parsedJson }),
+          signal: AbortSignal.timeout(5000)
+        });
+        if (res.ok) {
+          const responseData = await res.json();
+          if (responseData) {
+            setTestCases(prev => prev.map(tc => String(tc.id) === String(selectedTestCase.id) ? responseData : tc));
+          }
+        }
+      } catch (localErr) {
+        // Fall back to Supabase update
+        console.warn('Local test case update failed, saving to Supabase:', localErr);
+        try {
+          const { supabase } = await import('../../supabaseClient');
+          await supabase.from('test_cases').update({ commands: nlScript, cached_json: parsedJson }).eq('id', selectedTestCase.id);
+        } catch (sbErr) {
+          console.error('Supabase update also failed:', sbErr);
+        }
       }
     } catch (err) {
       console.error('Failed to save test updates:', err);
@@ -782,30 +766,68 @@ export default function ProjectDetails({ projects, testCases, setTestCases, exec
       }
       if (!cmdsToTranslate) return;
 
-      // Translate the commands first
-      const transRes = await fetch(`${LOCAL_ENGINE_URL}/api/translate`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ commands: cmdsToTranslate })
-      });
-      const parsedJson = await transRes.json();
+      // Step 1: Translate commands (try local backend first, fall back to rule-based)
+      let parsedSteps = [];
+      try {
+        const transRes = await fetch(`${LOCAL_ENGINE_URL}/api/translate`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ commands: cmdsToTranslate }),
+          signal: AbortSignal.timeout(10000)
+        });
+        if (transRes.ok) {
+          const transData = await transRes.json();
+          parsedSteps = transData.steps || transData || [];
+        }
+      } catch (transErr) {
+        console.warn('Translation via local backend failed, using simple fallback:', transErr);
+        // Simple rule-based fallback
+        parsedSteps = cmdsToTranslate.split('\n').filter(Boolean).map(line => {
+          const lower = line.toLowerCase();
+          if (lower.startsWith('open') || lower.startsWith('navigate') || lower.startsWith('go to'))
+            return { action: 'navigate', target: line.replace(/^(open|navigate|go to)\s*/i, '').trim() };
+          if (lower.startsWith('click'))
+            return { action: 'click', target: line.replace(/^click\s*/i, '').trim() };
+          if (lower.startsWith('fill') || lower.startsWith('type'))
+            return { action: 'fill', target: 'input', value: line.split('with').pop()?.trim() || '' };
+          if (lower.startsWith('verify') || lower.startsWith('assert'))
+            return { action: 'verify', target: line.replace(/^(verify|assert)\s*/i, '').trim() };
+          return { action: 'click', target: line.trim() };
+        });
+      }
 
-      // Save the translated test case via local backend
-      const saveRes = await fetch(`${LOCAL_ENGINE_URL}/api/test-cases`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          project_id: project.id,
-          name: uploadName,
-          type: uploadFile ? uploadFile.name.split('.').pop() : 'txt',
-          commands: uploadCmds,
-          cached_json: parsedJson
-        })
-      });
-      const savedData = await saveRes.json();
+      // Step 2: Save test case — try local backend, fall back to ProjectService
+      const tcPayload = {
+        project_id: project.id,
+        name: uploadName,
+        type: uploadFile ? uploadFile.name.split('.').pop() : 'txt',
+        commands: uploadCmds,
+        cached_json: parsedSteps
+      };
 
-      if (saveRes.ok && savedData) {
-        setTestCases([savedData, ...testCases]);
+      let savedData = null;
+      try {
+        const saveRes = await fetch(`${LOCAL_ENGINE_URL}/api/test-cases`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(tcPayload),
+          signal: AbortSignal.timeout(8000)
+        });
+        if (saveRes.ok) {
+          savedData = await saveRes.json();
+        }
+      } catch (saveErr) {
+        console.warn('Local test case save failed, using Supabase fallback:', saveErr);
+      }
+
+      // Supabase fallback if local backend is unavailable
+      if (!savedData) {
+        const { ProjectService } = await import('../../services/api');
+        savedData = await ProjectService.createTestCase(tcPayload);
+      }
+
+      if (savedData) {
+        setTestCases(prev => [savedData, ...prev]);
         setUploadSuccess(true);
         setTimeout(() => {
           setUploadSuccess(false);
@@ -816,7 +838,7 @@ export default function ProjectDetails({ projects, testCases, setTestCases, exec
         }, 1200);
       }
     } catch (err) {
-      console.error(err);
+      console.error('Upload failed:', err);
     } finally {
       setUploadLoading(false);
     }
@@ -893,8 +915,10 @@ export default function ProjectDetails({ projects, testCases, setTestCases, exec
 
       const execData = await executeRes.json();
       if (executeRes.ok) {
+        // Support both camelCase (executionId) and snake_case (execution_id)
+        const execId = execData.executionId || execData.execution_id;
         const newRun = {
-          id: execData.executionId,
+          id: execId,
           project_id: project.id,
           test_id: test.id,
           status: 'Running',
