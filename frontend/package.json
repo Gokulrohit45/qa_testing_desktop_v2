@@ -1,0 +1,69 @@
+{
+  "name": "qa-ai-platform-v2-frontend",
+  "private": true,
+  "version": "1.0.0",
+  "description": "QA-AI Autonomous Testing Platform V2 - Modular Desktop App",
+  "main": "electron/main.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "electron:dev": "concurrently \"vite\" \"wait-on http://localhost:5173 && electron .\"",
+    "electron:build": "vite build && electron-builder"
+  },
+  "build": {
+    "appId": "com.qaai.platform.v2",
+    "productName": "QA-AI Autonomous Testing Platform",
+    "compression": "normal",
+    "directories": {
+      "output": "installer"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "python_engine",
+        "to": "python_engine",
+        "filter": [
+          "**/*"
+        ]
+      }
+    ],
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ],
+      "sign": null,
+      "verifyUpdateCodeSignature": false
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    }
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.39.8",
+    "lucide-react": "^0.344.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.22.3"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.66",
+    "@types/react-dom": "^18.2.22",
+    "@vitejs/plugin-react": "^4.2.1",
+    "autoprefixer": "^10.4.18",
+    "concurrently": "^8.2.2",
+    "electron": "^29.1.5",
+    "electron-builder": "^24.13.3",
+    "postcss": "^8.4.35",
+    "tailwindcss": "^3.4.1",
+    "vite": "^5.1.6",
+    "wait-on": "^7.2.0"
+  }
+}

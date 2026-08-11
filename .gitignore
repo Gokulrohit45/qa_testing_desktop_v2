@@ -1,0 +1,23 @@
+# Heavy compiled Python binaries & Playwright driver
+python_engine/
+python_engine_dist/
+build/
+dist/
+installer/
+*.spec
+
+# Dependencies
+node_modules/
+__pycache__/
+*.pyc
+
+# Local Environment & Keys (Keep secure!)
+.env
+.env.local
+*.pem
+
+# IDE & OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
