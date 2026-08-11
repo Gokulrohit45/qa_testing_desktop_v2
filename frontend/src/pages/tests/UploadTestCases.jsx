@@ -64,20 +64,20 @@ export default function UploadTestCases({ projects, testCases, setTestCases }) {
       <div className="flex items-center gap-4">
         <button 
           onClick={() => navigate(-1)} 
-          className="p-2 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl text-slate-600 transition-colors"
+          className="p-2 bg-[#1d2132] hover:bg-[#252a3f] border border-[#2a2f45] rounded-xl text-zinc-300 transition-colors"
         >
           <ArrowLeft size={16} />
         </button>
         <div>
-          <h1 className="text-xl font-bold text-slate-900">Upload Test Cases</h1>
-          <p className="text-slate-500 text-xs mt-0.5">Specify natural language commands or upload sheets describing user workflow scripts.</p>
+          <h1 className="text-xl font-bold text-zinc-100">Upload Test Cases</h1>
+          <p className="text-zinc-400 text-xs mt-0.5">Specify natural language commands or upload sheets describing user workflow scripts.</p>
         </div>
       </div>
 
-      <form onSubmit={handleUpload} className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+      <form onSubmit={handleUpload} className="bg-[#161925] rounded-2xl border border-[#1e2029] overflow-hidden shadow-sm">
         <div className="p-6 space-y-5">
           <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-2">
+            <label className="block text-sm font-semibold text-zinc-300 mb-2">
               Test Case Name
             </label>
             <input
@@ -86,13 +86,13 @@ export default function UploadTestCases({ projects, testCases, setTestCases }) {
               placeholder="e.g. Authentication Flow"
               value={testName}
               onChange={(e) => setTestName(e.target.value)}
-              className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-slate-805 focus:outline-none focus:ring-1 focus:ring-brand-500 focus:border-brand-500 text-sm transition-all"
+              className="w-full px-3 py-2.5 bg-[#11131c] border border-[#1e2029] rounded-xl text-zinc-100 placeholder-zinc-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 text-sm transition-all"
             />
           </div>
 
           {/* Paste Commands Area */}
           <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-2">
+            <label className="block text-sm font-semibold text-zinc-300 mb-2">
               Paste Natural Language Commands
             </label>
             <textarea
@@ -100,56 +100,56 @@ export default function UploadTestCases({ projects, testCases, setTestCases }) {
               placeholder="Enter plain text commands, one per line. Example:&#13;Open Login Page&#13;Enter Admin Username&#13;Enter Admin Password&#13;Click Login Button&#13;Verify Dashboard is visible"
               value={pasteCommands}
               onChange={(e) => setPasteCommands(e.target.value)}
-              className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-slate-805 font-mono text-xs focus:outline-none focus:ring-1 focus:ring-brand-500 focus:border-brand-500 transition-all"
+              className="w-full px-3 py-2.5 bg-[#11131c] border border-[#1e2029] rounded-xl text-zinc-100 placeholder-zinc-500 font-mono text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
             />
           </div>
 
           <div className="flex items-center gap-4">
-            <div className="h-px bg-slate-200 flex-1"></div>
-            <span className="text-xs text-slate-400 font-bold uppercase tracking-wider">OR</span>
-            <div className="h-px bg-slate-200 flex-1"></div>
+            <div className="h-px bg-[#1e2029] flex-1"></div>
+            <span className="text-xs text-zinc-500 font-bold uppercase tracking-wider">OR</span>
+            <div className="h-px bg-[#1e2029] flex-1"></div>
           </div>
 
           {/* Drag & Drop File */}
           <div>
-            <label className="block text-sm font-semibold text-slate-705 mb-2">
+            <label className="block text-sm font-semibold text-zinc-300 mb-2">
               Upload Command File (TXT, CSV, Excel)
             </label>
-            <div className="border-2 border-dashed border-slate-200 hover:border-brand-500/50 rounded-2xl p-6 text-center transition-colors relative cursor-pointer group bg-slate-50/50">
+            <div className="border-2 border-dashed border-[#1e2029] hover:border-indigo-500/50 rounded-2xl p-6 text-center transition-colors relative cursor-pointer group bg-[#11131c]">
               <input
                 type="file"
                 accept=".txt,.csv,.xlsx,.xls"
                 onChange={handleFileChange}
                 className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
               />
-              <Upload size={32} className="mx-auto text-slate-400 group-hover:text-brand-500 transition-colors mb-3" />
-              <div className="text-xs font-semibold text-slate-600">
+              <Upload size={32} className="mx-auto text-zinc-500 group-hover:text-indigo-400 transition-colors mb-3" />
+              <div className="text-xs font-semibold text-zinc-300">
                 {selectedFile ? `Selected: ${selectedFile.name}` : 'Click or Drag file to this area to upload'}
               </div>
-              <p className="text-[10px] text-slate-400 mt-1">Supports TXT, CSV, or XLSX sheets up to 5MB</p>
+              <p className="text-[10px] text-zinc-500 mt-1">Supports TXT, CSV, or XLSX sheets up to 5MB</p>
             </div>
           </div>
         </div>
 
-        <div className="p-4 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
-          <div className="text-xs text-slate-500 flex items-center gap-2">
+        <div className="p-4 bg-[#11131c] border-t border-[#1e2029] flex items-center justify-between">
+          <div className="text-xs text-zinc-400 flex items-center gap-2">
             {loading && (
               <>
-                <Loader className="animate-spin text-brand-500" size={16} />
+                <Loader className="animate-spin text-indigo-400" size={16} />
                 <span>AI Gemini is interpreting natural language commands...</span>
               </>
             )}
             {success && (
               <>
-                <CheckCircle className="text-emerald-500" size={16} />
-                <span className="text-emerald-600 font-semibold">Test parsed & saved successfully!</span>
+                <CheckCircle className="text-emerald-400" size={16} />
+                <span className="text-emerald-400 font-semibold">Test parsed & saved successfully!</span>
               </>
             )}
           </div>
           <button
             type="submit"
             disabled={loading || success}
-            className="px-4 py-2 bg-brand-500 hover:bg-brand-600 disabled:opacity-50 text-white font-semibold rounded-xl text-sm shadow-sm transition-colors"
+            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-semibold rounded-xl text-sm shadow-sm transition-colors"
           >
             {loading ? 'Processing...' : 'Upload Test Case'}
           </button>

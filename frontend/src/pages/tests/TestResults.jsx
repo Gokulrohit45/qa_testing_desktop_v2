@@ -33,32 +33,32 @@ export default function TestResults({ projects, executions }) {
   return (
     <div className="space-y-6">
       {/* Header Banner */}
-      <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <div className="bg-[#161925] p-6 rounded-2xl border border-[#1e2029] shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div className="flex items-center gap-4">
           <Link 
             to={`/projects/${project.id}`} 
-            className="p-2 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl text-slate-600 transition-colors"
+            className="p-2 bg-[#1d2132] hover:bg-[#252a3f] border border-[#2a2f45] rounded-xl text-zinc-300 transition-colors"
           >
             <ArrowLeft size={16} />
           </Link>
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-xs font-bold text-slate-400 font-mono">Run #{run.id}</span>
+              <span className="text-xs font-bold text-zinc-400 font-mono">Run #{run.id}</span>
               <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold ${
-                run.status === 'Passed' ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'
+                run.status === 'Passed' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'
               }`}>
                 {run.status === 'Passed' ? <CheckCircle size={12} /> : <XCircle size={12} />}
                 {run.status}
               </span>
             </div>
-            <h1 className="text-xl font-bold text-slate-900 mt-1">Execution Results Summary</h1>
+            <h1 className="text-xl font-bold text-zinc-100 mt-1">Execution Results Summary</h1>
           </div>
         </div>
 
         <div className="flex gap-2">
           <Link 
             to={`/projects/${project.id}/reports/${run.id}`}
-            className="px-3.5 py-2 border border-slate-200 hover:bg-slate-50 text-slate-700 font-semibold rounded-xl text-sm transition-colors flex items-center gap-1.5 shadow-sm"
+            className="px-3.5 py-2 border border-[#1e2029] hover:bg-[#1d2132] text-zinc-300 font-semibold rounded-xl text-sm transition-colors flex items-center gap-1.5 shadow-sm"
           >
             <Eye size={14} />
             View PDF Report
@@ -69,46 +69,46 @@ export default function TestResults({ projects, executions }) {
       {/* Grid: metadata info card + execution details */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Run summary stats card */}
-        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm h-fit space-y-6">
-          <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wider">Metrics Overview</h2>
+        <div className="bg-[#161925] p-6 rounded-2xl border border-[#1e2029] shadow-sm h-fit space-y-6">
+          <h2 className="text-sm font-bold text-zinc-300 uppercase tracking-wider">Metrics Overview</h2>
 
           <div className="space-y-4">
             <div className="flex items-center gap-3">
-              <Calendar size={18} className="text-slate-400" />
+              <Calendar size={18} className="text-zinc-500" />
               <div>
-                <div className="text-[10px] text-slate-400 uppercase font-semibold">Date Completed</div>
-                <div className="text-sm font-semibold text-slate-800">{run.date}</div>
+                <div className="text-[10px] text-zinc-500 uppercase font-semibold">Date Completed</div>
+                <div className="text-sm font-semibold text-zinc-200">{run.date}</div>
               </div>
             </div>
 
             <div className="flex items-center gap-3">
-              <Clock size={18} className="text-slate-400" />
+              <Clock size={18} className="text-zinc-500" />
               <div>
-                <div className="text-[10px] text-slate-400 uppercase font-semibold">Run Duration</div>
-                <div className="text-sm font-semibold text-slate-800">{run.duration}s</div>
+                <div className="text-[10px] text-zinc-500 uppercase font-semibold">Run Duration</div>
+                <div className="text-sm font-semibold text-zinc-200">{run.duration}s</div>
               </div>
             </div>
 
             <div className="flex items-center gap-3">
-              <Monitor size={18} className="text-slate-400" />
+              <Monitor size={18} className="text-zinc-500" />
               <div>
-                <div className="text-[10px] text-slate-400 uppercase font-semibold">Browser Env</div>
-                <div className="text-sm font-semibold text-slate-800">Chromium v120.0</div>
+                <div className="text-[10px] text-zinc-500 uppercase font-semibold">Browser Env</div>
+                <div className="text-sm font-semibold text-zinc-200">Chromium v120.0</div>
               </div>
             </div>
           </div>
 
-          <hr className="border-slate-100" />
+          <hr className="border-[#1e2029]" />
 
           {/* Verification Screenshot viewport */}
           <div className="space-y-2">
-            <div className="text-xs text-slate-500 font-bold uppercase tracking-wider">Execution Verification Snapshot</div>
-            <div className="border border-slate-200 rounded-xl overflow-hidden shadow-sm relative group bg-slate-950">
-              <div className="h-44 w-full flex items-center justify-center text-slate-500 font-semibold select-none bg-slate-100 text-xs">
+            <div className="text-xs text-zinc-400 font-bold uppercase tracking-wider">Execution Verification Snapshot</div>
+            <div className="border border-[#1e2029] rounded-xl overflow-hidden shadow-sm relative group bg-[#0b0c10]">
+              <div className="h-44 w-full flex items-center justify-center text-zinc-500 font-semibold select-none bg-[#11131c] text-xs">
                 Viewport screenshot mockup (Success validation)
               </div>
-              <div className="absolute inset-0 bg-slate-900/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                <button className="px-3 py-1.5 bg-white text-slate-900 font-bold rounded-lg text-xs flex items-center gap-1 shadow">
+              <div className="absolute inset-0 bg-[#0b0c10]/80 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                <button className="px-3 py-1.5 bg-indigo-600 text-white font-bold rounded-lg text-xs flex items-center gap-1 shadow">
                   <Download size={12} />
                   Download Screenshot
                 </button>
@@ -118,26 +118,26 @@ export default function TestResults({ projects, executions }) {
         </div>
 
         {/* Steps details breakdown */}
-        <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-          <div className="p-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-550 uppercase tracking-wider">Playwright Execution Action-Tree</span>
-            <span className="text-xs font-semibold text-slate-500">{steps.length} Actions Completed</span>
+        <div className="lg:col-span-2 bg-[#161925] rounded-2xl border border-[#1e2029] shadow-sm overflow-hidden">
+          <div className="p-4 bg-[#11131c] border-b border-[#1e2029] flex items-center justify-between">
+            <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Playwright Execution Action-Tree</span>
+            <span className="text-xs font-semibold text-zinc-500">{steps.length} Actions Completed</span>
           </div>
 
-          <div className="divide-y divide-slate-100">
+          <div className="divide-y divide-[#1e2029]">
             {steps.map((step, index) => (
               <div key={step.id} className="p-5 flex items-start gap-4">
                 <div className={`mt-0.5 rounded-full p-1 ${
-                  step.status === 'passed' ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'
+                  step.status === 'passed' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'
                 }`}>
                   {step.status === 'passed' ? <CheckCircle size={16} /> : <XCircle size={16} />}
                 </div>
                 <div className="flex-1 space-y-1">
                   <div className="flex justify-between">
-                    <span className="font-semibold text-sm text-slate-800 font-mono">{step.action}</span>
-                    <span className="text-[10px] text-slate-400 font-mono">Step #{index + 1}</span>
+                    <span className="font-semibold text-sm text-zinc-200 font-mono">{step.action}</span>
+                    <span className="text-[10px] text-zinc-500 font-mono">Step #{index + 1}</span>
                   </div>
-                  <div className="bg-slate-50 border border-slate-100/60 p-2.5 rounded-lg text-xs font-mono text-slate-650 max-w-lg break-all">
+                  <div className="bg-[#11131c] border border-[#1e2029] p-2.5 rounded-lg text-xs font-mono text-zinc-300 max-w-lg break-all">
                     {JSON.stringify(step.args, null, 2)}
                   </div>
                 </div>

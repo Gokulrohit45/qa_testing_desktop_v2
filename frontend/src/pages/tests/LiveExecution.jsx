@@ -88,18 +88,18 @@ export default function LiveExecution({ projects, testCases, executions, setExec
   return (
     <div className="space-y-6">
       {/* Run Header */}
-      <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <div className="bg-[#161925] p-6 rounded-2xl border border-[#1e2029] shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <span className="h-2 w-2 rounded-full bg-brand-500 animate-ping"></span>
-            <span className="text-xs font-bold text-brand-550 uppercase tracking-wider">Live Run Sandbox</span>
+            <span className="h-2 w-2 rounded-full bg-indigo-500 animate-ping"></span>
+            <span className="text-xs font-bold text-indigo-400 uppercase tracking-wider">Live Run Sandbox</span>
           </div>
-          <h1 className="text-xl font-bold text-slate-900 mt-1">Executing: {testCase.name}</h1>
-          <p className="text-slate-500 text-xs mt-0.5">Automating steps using Playwright browser engine context.</p>
+          <h1 className="text-xl font-bold text-zinc-100 mt-1">Executing: {testCase.name}</h1>
+          <p className="text-zinc-400 text-xs mt-0.5">Automating steps using Playwright browser engine context.</p>
         </div>
 
-        <div className="flex items-center gap-2 bg-slate-50 border border-slate-200/60 px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-600">
-          <RefreshCw className="animate-spin text-brand-500" size={14} />
+        <div className="flex items-center gap-2 bg-[#11131c] border border-[#1e2029] px-3.5 py-2 rounded-xl text-xs font-semibold text-zinc-300">
+          <RefreshCw className="animate-spin text-indigo-400" size={14} />
           Running step {currentStepIndex + 1} of {steps.length}
         </div>
       </div>
@@ -107,42 +107,42 @@ export default function LiveExecution({ projects, testCases, executions, setExec
       {/* Grid Layout: Live steps + live logs */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Step checklist */}
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-4 h-[500px] overflow-y-auto">
-          <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wider mb-2">Workflow Steps</h2>
+        <div className="bg-[#161925] rounded-2xl border border-[#1e2029] shadow-sm p-6 space-y-4 h-[500px] overflow-y-auto">
+          <h2 className="text-sm font-bold text-zinc-300 uppercase tracking-wider mb-2">Workflow Steps</h2>
           <div className="space-y-3">
             {steps.map((step, idx) => (
               <div 
                 key={step.id} 
                 className={`p-3 rounded-xl border flex items-center justify-between transition-colors ${
                   step.status === 'running' 
-                    ? 'border-brand-500/30 bg-brand-50/20' 
+                    ? 'border-indigo-500/30 bg-indigo-500/10' 
                     : step.status === 'passed'
-                    ? 'border-emerald-200 bg-emerald-50/10'
-                    : 'border-slate-100 bg-white'
+                    ? 'border-emerald-500/20 bg-emerald-500/10'
+                    : 'border-[#1e2029] bg-[#11131c]'
                 }`}
               >
                 <div className="flex items-center gap-3">
                   <span className={`h-5 w-5 rounded-full flex items-center justify-center font-bold text-xs ${
                     step.status === 'passed'
-                      ? 'bg-emerald-100 text-emerald-700'
+                      ? 'bg-emerald-500/20 text-emerald-400'
                       : step.status === 'running'
-                      ? 'bg-brand-100 text-brand-600'
-                      : 'bg-slate-100 text-slate-400'
+                      ? 'bg-indigo-500/20 text-indigo-400'
+                      : 'bg-[#1d2132] text-zinc-500'
                   }`}>
                     {idx + 1}
                   </span>
                   <div>
-                    <span className="font-semibold text-xs text-slate-800 font-mono">{step.action}</span>
-                    <p className="text-[10px] text-slate-400 truncate max-w-[150px]">
+                    <span className="font-semibold text-xs text-zinc-200 font-mono">{step.action}</span>
+                    <p className="text-[10px] text-zinc-500 truncate max-w-[150px]">
                       {JSON.stringify(step.args)}
                     </p>
                   </div>
                 </div>
 
                 <div>
-                  {step.status === 'running' && <Loader className="animate-spin text-brand-500" size={14} />}
-                  {step.status === 'passed' && <CheckCircle2 className="text-emerald-500" size={14} />}
-                  {step.status === 'pending' && <span className="h-2.5 w-2.5 rounded-full bg-slate-200"></span>}
+                  {step.status === 'running' && <Loader className="animate-spin text-indigo-400" size={14} />}
+                  {step.status === 'passed' && <CheckCircle2 className="text-emerald-400" size={14} />}
+                  {step.status === 'pending' && <span className="h-2.5 w-2.5 rounded-full bg-[#1d2132]"></span>}
                 </div>
               </div>
             ))}
@@ -152,14 +152,14 @@ export default function LiveExecution({ projects, testCases, executions, setExec
         {/* Live Logs & Preview Viewport */}
         <div className="lg:col-span-2 flex flex-col gap-6">
           {/* Logs panel */}
-          <div className="bg-slate-950 rounded-2xl border border-slate-900 shadow-xl overflow-hidden flex flex-col h-[500px]">
-            <div className="px-5 py-3.5 bg-slate-900 border-b border-slate-950 flex items-center gap-2">
-              <Terminal size={14} className="text-slate-400" />
-              <span className="text-xs font-bold text-slate-300 uppercase tracking-wider">Playwright Live Execution logs</span>
+          <div className="bg-[#0b0c10] rounded-2xl border border-[#1e2029] shadow-xl overflow-hidden flex flex-col h-[500px]">
+            <div className="px-5 py-3.5 bg-[#11131c] border-b border-[#1e2029] flex items-center gap-2">
+              <Terminal size={14} className="text-zinc-400" />
+              <span className="text-xs font-bold text-zinc-300 uppercase tracking-wider">Playwright Live Execution logs</span>
             </div>
-            <div className="flex-1 p-6 font-mono text-xs text-slate-300 overflow-y-auto space-y-2">
+            <div className="flex-1 p-6 font-mono text-xs text-zinc-300 overflow-y-auto space-y-2">
               {logs.map((log, idx) => (
-                <div key={idx} className={log.startsWith('[SUCCESS]') ? 'text-emerald-400' : log.startsWith('[ERROR]') ? 'text-rose-400' : 'text-slate-300'}>
+                <div key={idx} className={log.startsWith('[SUCCESS]') ? 'text-emerald-400' : log.startsWith('[ERROR]') ? 'text-rose-400' : 'text-zinc-300'}>
                   {log}
                 </div>
               ))}

@@ -1,6 +1,7 @@
 {
   "name": "qa-ai-platform-v2-frontend",
   "private": true,
+  "type": "module",
   "version": "1.0.0",
   "description": "QA-AI Autonomous Testing Platform V2 - Modular Desktop App",
   "main": "electron/main.js",
